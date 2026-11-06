@@ -10,7 +10,9 @@ const con = mysql.createPool({
      port:3307
 });
 
-app.get('/kategoriak', async (reg,res) => {
+app.use(express.json());
+
+app.get('/api/kategoriak', async (reg,res) => {
     try{
         const query = "SELECT * FROM `kategoriak`"
     const [rows] = await con.query(query);
@@ -30,9 +32,9 @@ app.post('/kategoriak', async (reg, res) =>{
         }
     
     
-        const query = "INSERT INTO termekek (id,nev) VALUES (?,?)";
-        const [result] = await con.query(query, [id, nev,]);
-        res.status(201).json({message: "Az adatok sikeresen hozzá lettek adva"});
+        const query = "INSERT INTO kategoriak (id,nev) VALUES (?,?)";
+        const [result] = await con.query(query, [id, nev]);
+        res.status(201).json({message: "Az adatok sikeresen hozzá lettek adva", id: result.insertId});
     }
     catch(error){
         console.error("Hiba a beszúrás során:", error);
@@ -40,22 +42,24 @@ app.post('/kategoriak', async (reg, res) =>{
     }
     });
 
-app.post('/termekek', async (reg, res) =>{
+app.patch('/kategoriak/:id', async (reg, res) =>{
 try{
-    const {id, kategoria_id, nev, ar_ft, keszlet, elerheto} = reg.body;
+    const {id} = reg.params;
+    const {nev} = reg.body;
 
-    if(!id || !kategoria_id || !nev || !ar_ft || !keszlet || !elerheto){
-        return res.status(400).json({error:'A mezők kitöltése kötelező.'});
+    if(!nev){
+        return res.status(400).json({error:'A név megadása kötelező.'});
     }
 
 
-    const query = "INSERT INTO termekek (id,kategoria_id,nev,ar_ft,keszlet,elerheto) VALUES (?,?,?,?,?,?)";
-    const [result] = await con.query(query, [id, kategoria_id, nev, ar_ft, keszlet, elerheto]);
-    res.status(201).json({message: "Az adatok sikeresen hozzá lettek adva"});
+    const query = "UPDATE kategoriak SET nev = ? WHERE id = ?";
+    const [result] = await con.query(query, [nev, id]);
+    res.status(201).json({message: "Az adatok sikeresen frissítve lettek"});
+    
 }
 catch(error){
-    console.error("Hiba a beszúrás során:", error);
-res.status(500).json({error: "Nem sikerült az adatokat hozzá adni !"});
+    console.error("Hiba a frissítés során:", error);
+res.status(500).json({error: "Nem sikerült a frissítés!"});
 }
 });
 app.listen(3000, () => {
