@@ -62,6 +62,22 @@ catch(error){
 res.status(500).json({error: "Nem sikerült a frissítés!"});
 }
 });
+app.delete('/api/kategoriak/:id', async (reg, res) =>{
+    try{
+        const {id} = reg.params;
+        const query = "DELETE FROM kategoriak WHERE id = ?";
+        const [result] = await con.query(query, [id]);
+        if(result.affectedRows === 0){
+            return res.status(404).json({error: 'A kategória nem található'})
+        }
+        res.status(201).json({message: "Az adatok sikeresen dörölve lett"});
+        
+    }
+    catch(error){
+        console.error("Hiba a törlés során:", error);
+    res.status(500).json({error: "Nem sikerült a törlés!"});
+    }
+    });
 app.listen(3000, () => {
     console.log('Server running on http://localhost:3000');
   });
